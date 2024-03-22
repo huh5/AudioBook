@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Privacy - Media Library Usage Description  </key>
+	<string>$(PRODUCT_NAME) media library use</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Пожалуйста, разрешите доступ к вашей медиатеке, чтобы выбирать аудиофайлы.</string>
+	<key>NSUbiquitousContainerIsDocumentScopePublic</key>
+	<string>NSUbiquitousContainerIsDocumentScopePublic</string>
+	<key>CFBundleURLTypes</key>
+	<string></string>
+</dict>
+</plist>
