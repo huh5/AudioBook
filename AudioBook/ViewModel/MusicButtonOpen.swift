@@ -4,9 +4,8 @@
 //
 //  Created by Богдан Ткачивський on 19/03/2024.
 //
-// Your corrected code goes here
+
 import SwiftUI
-import AVFoundation
 
 class MusicButtonData: ObservableObject {
     @Published var selectedFiles: [URL]
@@ -23,12 +22,12 @@ class MusicButtonData: ObservableObject {
 
 struct MusicButtonOpen: View {
     @ObservedObject var data: MusicButtonData
-    @State private var showDocumentPicker = false
+    @State private var showDocumentPicker = false // Add state variable to control sheet presentation
 
     var body: some View {
         VStack {
             Button(action: { showDocumentPicker.toggle() }) {
-                Text("Выбрать аудиофайлы")
+                Text("Choose Audio Files")
                     .foregroundColor(.white)
                     .font(.headline)
                     .frame(height: 55)
@@ -37,15 +36,14 @@ struct MusicButtonOpen: View {
                     .cornerRadius(10)
             }
         }
-        .sheet(isPresented: $showDocumentPicker) {
-            DocumentPicker(data: data) // Pass MusicButtonData here
+        .sheet(isPresented: $showDocumentPicker) { // Use $showDocumentPicker to bind to state variable
+            DocumentPicker(data: self.data)
         }
     }
 }
 
-// Update DocumentPicker to use MusicButtonData
 struct DocumentPicker: UIViewControllerRepresentable {
-    @ObservedObject var data: MusicButtonData
+    var data: MusicButtonData // Remove Binding
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -68,6 +66,7 @@ struct DocumentPicker: UIViewControllerRepresentable {
         }
 
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            print("Document picker did pick documents: \(urls)")
             // Call addFiles on MusicButtonData
             parent.data.addFiles(urls: urls)
         }

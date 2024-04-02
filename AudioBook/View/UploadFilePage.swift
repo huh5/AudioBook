@@ -46,7 +46,8 @@ struct UploadFilePage: View {
                             .scaledToFit()
                             .frame(width: 107, height: 95.50034)
                             .foregroundColor(.gray)
-                        NavigationLink(destination: AddBookView(selectedFiles: $selectedFiles, libraryStore: LibraryStore(), imageStore: ImageStore(), musicButtonData: MusicButtonData(selectedFiles: selectedFiles))) {
+                        NavigationLink(destination: AddBookView(selectedFiles: $selectedFiles, libraryStore: LibraryStore(), imageStore: ImageStore())) {
+
 
 
                             Text("Upload")

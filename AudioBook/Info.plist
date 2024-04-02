@@ -10,5 +10,17 @@
 	<string>NSUbiquitousContainerIsDocumentScopePublic</string>
 	<key>CFBundleURLTypes</key>
 	<string></string>
+    <key>NSOpenAccessClientAuthorizationRequests</key>
+    <array>
+        <dict>
+            <key>NSOpenAccessDocumentScope</key>
+            <string>com.example.myapp.documents</string> <!-- Идентификатор области документа -->
+            <key>NSOpenAccessDocumentIdentifier</key>
+            <string>myDocument</string> <!-- Идентификатор документа -->
+        </dict>
+    </array>
+
+
+
 </dict>
 </plist>

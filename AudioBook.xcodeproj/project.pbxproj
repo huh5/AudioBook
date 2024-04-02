@@ -30,7 +30,7 @@
 		99D0BF4E2BA9674100B236E8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		99D0BF502BA9674300B236E8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		99D0BF532BA9674300B236E8 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		99D0BF5A2BA9677A00B236E8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		99D0BF5A2BA9677A00B236E8 /* Info.plist */ = {isa = PBXFileReference; explicitFileType = text.xml; path = Info.plist; sourceTree = "<group>"; };
 		99D0BF5E2BA967CA00B236E8 /* MusicButtonOpen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicButtonOpen.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 

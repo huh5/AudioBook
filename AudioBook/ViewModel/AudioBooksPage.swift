@@ -63,7 +63,10 @@ class BookDetail: Identifiable, Codable {
         }
     }
 }
-
+struct IdentifiedURL: Identifiable {
+    var id: URL { url }
+    let url: URL
+}
 class LibraryStore: ObservableObject {
     @Published var library: [BookDetail]
 
@@ -159,7 +162,7 @@ struct BookDetailView: View {
     var bookDetail: BookDetail
     @ObservedObject var libraryStore: LibraryStore
     @ObservedObject var imageStore: ImageStore
-    @State private var bookIndex: Int = 0
+    @State private var selectedFile: IdentifiedURL? // Change type to IdentifiedURL
 
     var body: some View {
         ScrollView {
@@ -177,31 +180,25 @@ struct BookDetailView: View {
                     .font(.subheadline)
                     .foregroundColor(.gray)
             }
-            Spacer()
             VStack {
-                ForEach(bookDetail.files.indices, id: \.self) { index in
-                    NavigationLink(destination: Player(audioURL: bookDetail.files[index].fileURL,
-                                                        audioFileName: bookDetail.files[index].fileName,
-                                                        selectedBookDetail: $selectedBookDetail,
-                                                        expandSheet: .constant(true),
-                                                        animation: Namespace().wrappedValue)) {
-                        HStack {
-                            Text(bookDetail.files[index].fileName)
-                            Spacer()
-                        }
+                ForEach(bookDetail.files, id: \.id) { file in
+                    Button(action: {
+                        self.selectedFile = IdentifiedURL(url: file.fileURL) // Wrap URL in IdentifiedURL
+                    }) {
+                        Text(file.fileName)
                     }
                 }
             }
-            .padding()
-            .navigationTitle(bookDetail.book.title)
-            .onAppear {
-                if let index = self.libraryStore.library.firstIndex(where: { $0.id == self.bookDetail.id }) {
-                    self.bookIndex = index
-                }
-            }
+        }
+        .padding()
+        .navigationTitle(bookDetail.book.title)
+        .sheet(item: $selectedFile) { identifiedURL in // Use item instead of isPresented for dynamic sheet presentation
+            Player(audioURL: identifiedURL.url, audioFileName: identifiedURL.url.lastPathComponent, selectedBookDetail: $selectedBookDetail, expandSheet: .constant(true), animation: Namespace().wrappedValue)
+
         }
     }
 }
+
 
 struct AddBookView: View {
     @Binding var selectedFiles: [URL]
@@ -211,9 +208,8 @@ struct AddBookView: View {
     @State private var author = ""
     @State private var image: UIImage?
     @State private var isImagePickerPresented = false
-    @StateObject var musicButtonData = MusicButtonData(selectedFiles: [])
+    @ObservedObject var musicButtonData = MusicButtonData()
 
-    
     var body: some View {
         List {
             Section {
@@ -221,66 +217,69 @@ struct AddBookView: View {
                 TextField("Author", text: $author)
             }
             Section {
-                           if let image = image {
-                               HStack {
-                                   Image(uiImage: image)
-                                       .resizable()
-                                       .scaledToFit()
-                                       .frame(height: 200)
-                                       .cornerRadius(10)
-                                       .padding(.vertical, 10)
-                                   Spacer()
-                                   Button(action: {
-                                       // Clear the image
-                                       self.image = nil
-                                   }) {
-                                       Image(systemName: "trash")
-                                           .foregroundColor(.red)
-                                   }
-                               }
-                           } else {
-                               Button(action: {
-                                   isImagePickerPresented = true
-                               }, label: {
-                                   Text("Add Image")
-                               })
-                           }
-                       }
-                       Section {
-                           MusicButtonOpen(data: musicButtonData)
-                           
-                           ForEach(selectedFiles.indices, id: \.self) { index in
-                               Button(action: {
-                                   // No need to add selected files here
-                               }) {
-                                   Text(selectedFiles[index].lastPathComponent)
-                               }
-                           }
-                       }
-                       Section {
-                           Button("Add Book") {
-                               if !self.title.isEmpty && !self.author.isEmpty  {
-                                   // Create a new BookDetail object with the selected files
-                                   let newBook = Book(title: self.title, author: self.author)
-                                   let files: [FileDetail] = selectedFiles.map { FileDetail(fileName: $0.lastPathComponent, fileURL: $0) }
-                                   let newBookDetail = BookDetail(book: newBook, files: files, imageData: self.image?.jpegData(compressionQuality: 0.5))
-                                   // Add the new book to the library
-                                   self.libraryStore.addBook(newBookDetail)
-                                   // Reset all data for adding a new book
-                                   self.title = ""
-                                   self.author = ""
-                                   self.image = nil
-                                   self.selectedFiles = []
-                               }
-                           }
-                       }
-                   }
-                   .navigationTitle("Add Book")
-                   .sheet(isPresented: $isImagePickerPresented) {
-                    ImagePicker(image: $image)
-                   }
-               }
-           }
+                if let image = image {
+                    HStack {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 200)
+                            .cornerRadius(10)
+                            .padding(.vertical, 10)
+                        Spacer()
+                        Button(action: {
+                            // Clear the image
+                            self.image = nil
+                        }) {
+                            Image(systemName: "trash")
+                                .foregroundColor(.red)
+                        }
+                    }
+                } else {
+                    Button(action: {
+                        isImagePickerPresented = true
+                    }, label: {
+                        Text("Add Image")
+                    })
+                }
+            }
+            Section {
+                MusicButtonOpen(data: musicButtonData)
+                
+                ForEach(musicButtonData.selectedFiles.indices, id: \.self) { index in
+                    Button(action: {
+                        // No need to add selected files here
+                    }) {
+                        Text(musicButtonData.selectedFiles[index].lastPathComponent)
+                    }
+                }
+            }
+            Section {
+                Button("Add Book") {
+                    if !self.title.isEmpty && !self.author.isEmpty  {
+                        // Create a new BookDetail object with the selected files
+                        let newBook = Book(title: self.title, author: self.author)
+                        let files: [FileDetail] = musicButtonData.selectedFiles.map { FileDetail(fileName: $0.lastPathComponent, fileURL: $0) }
+                        let newBookDetail = BookDetail(book: newBook, files: files, imageData: self.image?.jpegData(compressionQuality: 0.5))
+                        // Add the new book to the library
+                        self.libraryStore.addBook(newBookDetail)
+                        // Reset all data for adding a new book
+                        self.title = ""
+                        self.author = ""
+                        self.image = nil
+                        self.selectedFiles = []
+                    }
+                }
+            }
+        }
+        .navigationTitle("Add Book")
+        .sheet(isPresented: $isImagePickerPresented) {
+            ImagePicker(image: $image)
+        }
+    }
+}
+
+
+
 
            struct AudioBookPage_Previews: PreviewProvider {
                static var previews: some View {
@@ -299,6 +298,7 @@ struct AddBookView: View {
                    self.imageData = UserDefaults.standard.data(forKey: "storedImageData")
                }
            }
+
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var image: UIImage?
     @Environment(\.presentationMode) var presentationMode
