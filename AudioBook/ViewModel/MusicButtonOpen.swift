@@ -50,8 +50,7 @@ struct DocumentPicker: UIViewControllerRepresentable {
     }
 
     func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
-        let picker = UIDocumentPickerViewController(documentTypes: ["public.audio"], in: .open)
-        picker.allowsMultipleSelection = true
+        let picker = UIDocumentPickerViewController(documentTypes: ["public.audio"], in: .import)
         picker.delegate = context.coordinator
         return picker
     }
@@ -59,20 +58,20 @@ struct DocumentPicker: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
 
     class Coordinator: NSObject, UIDocumentPickerDelegate {
-        var parent: DocumentPicker
+        let parent: DocumentPicker
 
         init(parent: DocumentPicker) {
             self.parent = parent
         }
 
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-            print("Document picker did pick documents: \(urls)")
-            // Call addFiles on MusicButtonData
             parent.data.addFiles(urls: urls)
         }
+    }
+}
 
-        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-            // Optional: handle document picker cancellation
-        }
+struct MusicButtonOpen_Previews: PreviewProvider {
+    static var previews: some View {
+        MusicButtonOpen(data: MusicButtonData())
     }
 }
