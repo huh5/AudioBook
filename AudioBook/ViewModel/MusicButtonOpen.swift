@@ -9,6 +9,7 @@ import SwiftUI
 
 class MusicButtonData: ObservableObject {
     @Published var selectedFiles: [URL]
+    @Published var showDocumentPicker: Bool = false
 
     init(selectedFiles: [URL] = []) {
         self.selectedFiles = selectedFiles
@@ -18,11 +19,29 @@ class MusicButtonData: ObservableObject {
         print("Adding files: \(urls)")
         self.selectedFiles.append(contentsOf: urls)
     }
+    
+    // Добавьте метод для сохранения выбранных файлов
+    func saveSelectedFiles() {
+        // Сохраните выбранные файлы в UserDefaults или в другое хранилище данных
+        let encoder = JSONEncoder()
+        if let encodedData = try? encoder.encode(selectedFiles) {
+            UserDefaults.standard.set(encodedData, forKey: "SelectedFiles")
+        }
+    }
+    
+    // Добавьте метод для загрузки выбранных файлов
+    func loadSelectedFiles() {
+        if let data = UserDefaults.standard.data(forKey: "SelectedFiles") {
+            let decoder = JSONDecoder()
+            if let decodedFiles = try? decoder.decode([URL].self, from: data) {
+                self.selectedFiles = decodedFiles
+            }
+        }
+    }
 }
 
 struct MusicButtonOpen: View {
-    @ObservedObject var data: MusicButtonData
-    @State private var showDocumentPicker = false // Add state variable to control sheet presentation
+    @Binding var showDocumentPicker: Bool // Use a separate binding for simplicity
 
     var body: some View {
         VStack {
@@ -36,14 +55,11 @@ struct MusicButtonOpen: View {
                     .cornerRadius(10)
             }
         }
-        .sheet(isPresented: $showDocumentPicker) { // Use $showDocumentPicker to bind to state variable
-            DocumentPicker(data: self.data)
-        }
     }
 }
 
 struct DocumentPicker: UIViewControllerRepresentable {
-    var data: MusicButtonData // Remove Binding
+    @Binding var data: MusicButtonData
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -66,12 +82,7 @@ struct DocumentPicker: UIViewControllerRepresentable {
 
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
             parent.data.addFiles(urls: urls)
+            parent.data.showDocumentPicker = false // Dismiss the picker
         }
-    }
-}
-
-struct MusicButtonOpen_Previews: PreviewProvider {
-    static var previews: some View {
-        MusicButtonOpen(data: MusicButtonData())
     }
 }

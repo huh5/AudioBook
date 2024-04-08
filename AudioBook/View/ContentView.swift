@@ -8,13 +8,24 @@
 import SwiftUI
 import MediaPlayer
 
+class TabSelectionViewModel: ObservableObject {
+    @Published var tabSelected: Int = 0
+    @Published var musicButtonData = MusicButtonData() // Define musicButtonData here
+}
+
 struct ContentView: View {
-    @StateObject var tabSelectionViewModel = TabSelectionViewModel()
-    @State private var showAlert = false
+    @ObservedObject var tabSelectionViewModel = TabSelectionViewModel() // Используйте ObservedObject
+       @State private var showAlert = false
     
     var body: some View {
         VStack {
-            BooksPage(viewModel: tabSelectionViewModel)
+            BooksPage(viewModel: tabSelectionViewModel) // Передавайте tabSelectionViewModel напрямую
+                .onAppear {
+                    tabSelectionViewModel.musicButtonData.loadSelectedFiles()
+                }
+                .onDisappear {
+                    tabSelectionViewModel.musicButtonData.saveSelectedFiles()
+                }
         }
         .alert(isPresented: $showAlert) {
             Alert(
@@ -47,3 +58,4 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
+

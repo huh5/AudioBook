@@ -14,26 +14,26 @@ class FileDetail: Identifiable, Codable {
     var fileURL: URL
     var isDeleted = false
     var player: AVPlayer?
-
+    
     init(fileName: String, fileURL: URL) {
         self.fileName = fileName
         self.fileURL = fileURL
         self.player = AVPlayer(url: fileURL)
     }
-
+    
     // MARK: - Codable Conformance
-
+    
     private enum CodingKeys: String, CodingKey {
         case fileName, fileURL
     }
-
+    
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.fileName = try container.decode(String.self, forKey: .fileName)
         self.fileURL = try container.decode(URL.self, forKey: .fileURL)
         self.player = AVPlayer(url: fileURL)
     }
-
+    
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(fileName, forKey: .fileName)
@@ -52,12 +52,12 @@ class BookDetail: Identifiable, Codable {
     var book: Book
     var files: [FileDetail]
     var imageData: Data?
-
+    
     init(book: Book, files: [FileDetail], imageData: Data? = nil) {
         self.book = book
         self.files = files
         self.imageData = imageData
-
+        
         for file in files {
             file.player = AVPlayer(url: file.fileURL)
         }
@@ -69,13 +69,13 @@ struct IdentifiedURL: Identifiable {
 }
 class LibraryStore: ObservableObject {
     @Published var library: [BookDetail]
-
+    
     init() {
         self.library = LibraryStore.loadLibrary()
     }
-
+    
     private static let libraryKey = "Library"
-
+    
     private static func loadLibrary() -> [BookDetail] {
         if let data = UserDefaults.standard.data(forKey: libraryKey) {
             let decoder = JSONDecoder()
@@ -85,29 +85,29 @@ class LibraryStore: ObservableObject {
         }
         return []
     }
-
+    
     private func saveLibrary() {
         let encoder = JSONEncoder()
         if let encodedData = try? encoder.encode(library) {
             UserDefaults.standard.set(encodedData, forKey: Self.libraryKey)
         }
     }
-
+    
     func addBook(_ bookDetail: BookDetail) {
         library.append(bookDetail)
         saveLibrary()
     }
-
+    
     func addFiles(to index: Int, files: [FileDetail]) {
         library[index].files.append(contentsOf: files)
         saveLibrary()
     }
-
+    
     func removeFiles(from index: Int, at indexes: IndexSet) {
         library[index].files.remove(atOffsets: indexes)
         saveLibrary()
     }
-
+    
     func removeBook(at index: Int) {
         library.remove(at: index)
         saveLibrary()
@@ -119,6 +119,7 @@ struct AudioBooksPage: View {
     @ObservedObject var libraryStore: LibraryStore
     @ObservedObject var imageStore: ImageStore
     @Binding var selectedFiles: [URL] // Add selectedFiles binding
+    @State private var isAddBookViewActive = false // Add state for controlling AddBookView activation
 
     var body: some View {
         NavigationView {
@@ -129,7 +130,7 @@ struct AudioBooksPage: View {
                             Image(systemName: "book.closed.fill")
                                 .resizable()
                                 .frame(width: 20, height: 25)
-
+                            
                             VStack(alignment: .leading, spacing: 10) {
                                 Text(bookDetail.book.title)
                                     .font(.headline)
@@ -145,13 +146,11 @@ struct AudioBooksPage: View {
                 }
             }
             .navigationTitle("My Library")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: AddBookView(selectedFiles: $selectedFiles, libraryStore: libraryStore, imageStore: imageStore)) {
-                        Image(systemName: "plus.circle")
-                    }
+            .navigationBarItems(trailing:
+                NavigationLink(destination: AddBookView(selectedFiles: $selectedFiles, libraryStore: libraryStore, imageStore: imageStore), isActive: $isAddBookViewActive) {
+                    Image(systemName: "plus.circle")
                 }
-            }
+            )
         }
     }
 }
@@ -163,8 +162,9 @@ struct BookDetailView: View {
     @ObservedObject var libraryStore: LibraryStore
     @ObservedObject var imageStore: ImageStore
     @State private var selectedFile: IdentifiedURL? // Change type to IdentifiedURL
-
+    
     var body: some View {
+        
         ScrollView {
             VStack(spacing: 10) {
                 if let imageData = bookDetail.imageData, let uiImage = UIImage(data: imageData) {
@@ -194,7 +194,7 @@ struct BookDetailView: View {
         .navigationTitle(bookDetail.book.title)
         .sheet(item: $selectedFile) { identifiedURL in // Use item instead of isPresented for dynamic sheet presentation
             Player(audioURL: identifiedURL.url, audioFileName: identifiedURL.url.lastPathComponent, selectedBookDetail: $selectedBookDetail, expandSheet: .constant(true), animation: Namespace().wrappedValue)
-
+            
         }
     }
 }
@@ -208,7 +208,12 @@ struct AddBookView: View {
     @State private var author = ""
     @State private var image: UIImage?
     @State private var isImagePickerPresented = false
-    @ObservedObject var musicButtonData = MusicButtonData()
+
+    // Separate state for document picker
+    @State private var showDocumentPicker = false
+
+    // State for music button data
+    @State private var musicButtonDataBinding = MusicButtonData()
 
     var body: some View {
         List {
@@ -243,30 +248,31 @@ struct AddBookView: View {
                 }
             }
             Section {
-                MusicButtonOpen(data: musicButtonData)
+                // Button to show document picker
+                Button(action: {
+                    showDocumentPicker.toggle()
+                }) {
+                    Text("Choose Audio Files")
+                }
+                .sheet(isPresented: $showDocumentPicker) {
+                    DocumentPicker(data: $musicButtonDataBinding)
+                }
                 
-                ForEach(musicButtonData.selectedFiles.indices, id: \.self) { index in
-                    Button(action: {
-                        // No need to add selected files here
-                    }) {
-                        Text(musicButtonData.selectedFiles[index].lastPathComponent)
-                    }
+                ForEach(musicButtonDataBinding.selectedFiles, id: \.self) { fileURL in
+                    Text(fileURL.lastPathComponent)
                 }
             }
             Section {
                 Button("Add Book") {
-                    if !self.title.isEmpty && !self.author.isEmpty  {
-                        // Create a new BookDetail object with the selected files
-                        let newBook = Book(title: self.title, author: self.author)
-                        let files: [FileDetail] = musicButtonData.selectedFiles.map { FileDetail(fileName: $0.lastPathComponent, fileURL: $0) }
-                        let newBookDetail = BookDetail(book: newBook, files: files, imageData: self.image?.jpegData(compressionQuality: 0.5))
+                    if !title.isEmpty && !author.isEmpty  {
+                        // Create a new BookDetail object with selected files
+                        let newBook = Book(title: title, author: author)
+                        let files: [FileDetail] = musicButtonDataBinding.selectedFiles.map { FileDetail(fileName: $0.lastPathComponent, fileURL: $0) }
+                        let newBookDetail = BookDetail(book: newBook, files: files, imageData: image?.jpegData(compressionQuality: 0.5))
                         // Add the new book to the library
-                        self.libraryStore.addBook(newBookDetail)
+                        libraryStore.addBook(newBookDetail)
                         // Reset all data for adding a new book
-                        self.title = ""
-                        self.author = ""
-                        self.image = nil
-                        self.selectedFiles = []
+                        resetFields()
                     }
                 }
             }
@@ -275,29 +281,44 @@ struct AddBookView: View {
         .sheet(isPresented: $isImagePickerPresented) {
             ImagePicker(image: $image)
         }
+        .onAppear {
+            // Reset all fields when AddBookView appears
+            resetFields()
+        }
+    }
+    
+    // Function to reset all fields
+    func resetFields() {
+        title = ""
+        author = ""
+        image = nil
+        selectedFiles = []
+        musicButtonDataBinding.selectedFiles = []
+    }
+}
+struct AddBookView_Previews: PreviewProvider{
+    static var previews: some View{
+        AddBookView(selectedFiles: .constant([]), libraryStore: LibraryStore(), imageStore: ImageStore())
     }
 }
 
+struct AudioBookPage_Previews: PreviewProvider {
+    static var previews: some View {
+        AudioBooksPage(libraryStore: LibraryStore(), imageStore: ImageStore(), selectedFiles: .constant([]))
+    }
+}
 
-
-
-           struct AudioBookPage_Previews: PreviewProvider {
-               static var previews: some View {
-                   AudioBooksPage(libraryStore: LibraryStore(), imageStore: ImageStore(), selectedFiles: .constant([]))
-               }
-           }
-
-           class ImageStore: ObservableObject {
-               @Published var imageData: Data? {
-                   didSet {
-                       UserDefaults.standard.set(imageData, forKey: "storedImageData")
-                   }
-               }
-               
-               init() {
-                   self.imageData = UserDefaults.standard.data(forKey: "storedImageData")
-               }
-           }
+class ImageStore: ObservableObject {
+    @Published var imageData: Data? {
+        didSet {
+            UserDefaults.standard.set(imageData, forKey: "storedImageData")
+        }
+    }
+    
+    init() {
+        self.imageData = UserDefaults.standard.data(forKey: "storedImageData")
+    }
+}
 
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var image: UIImage?

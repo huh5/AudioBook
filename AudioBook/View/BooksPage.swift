@@ -8,18 +8,14 @@
 import SwiftUI
 import AVFoundation
 
-class TabSelectionViewModel: ObservableObject {
-    @Published var tabSelected: Int = 0
-}
-
 struct BooksPage: View {
-    @StateObject var viewModel = TabSelectionViewModel()
-    @StateObject var libraryStore = LibraryStore()
-    @StateObject var imageStore = ImageStore()
-    @StateObject var musicButtonData = MusicButtonData(selectedFiles: [])
+    @ObservedObject var viewModel: TabSelectionViewModel // Используйте ObservedObject здесь
+       @StateObject var libraryStore = LibraryStore()
+       @StateObject var imageStore = ImageStore()
+
 
     var body: some View {
-        TabView(selection: $viewModel.tabSelected){
+        TabView(selection: $viewModel.tabSelected) {
             homeView
                 .tabItem {
                     Label("Home", systemImage: "house.fill")
@@ -85,6 +81,6 @@ struct BooksPage: View {
     }
     
     private var libraryView: some View {
-        AudioBooksPage(libraryStore: libraryStore, imageStore: imageStore, selectedFiles: $musicButtonData.selectedFiles)
+        AudioBooksPage(libraryStore: libraryStore, imageStore: imageStore, selectedFiles: $viewModel.musicButtonData.selectedFiles)
     }
 }

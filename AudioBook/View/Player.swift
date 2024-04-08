@@ -5,6 +5,8 @@
 //  Created by Богдан Ткачивський on 19/03/2024.
 //
 
+
+import MediaPlayer
 import SwiftUI
 import AVFoundation
 
@@ -20,16 +22,16 @@ extension Color {
 
 struct Player: View {
     var audioURL: URL
-    var audioFileName: String
-    @Binding var selectedBookDetail: BookDetail?
-    @Binding var expandSheet: Bool
-    var animation: Namespace.ID
-    
-    @State private var player: AVAudioPlayer?
-    @State private var isPlaying = false
-    @State private var totalTime: TimeInterval = 0.0
-    @State private var currentTime: TimeInterval = 0.0
-    
+        var audioFileName: String
+        @Binding var selectedBookDetail: BookDetail?
+        @Binding var expandSheet: Bool
+        var animation: Namespace.ID
+        
+        @State private var player: AVAudioPlayer?
+        @State private var isPlaying = false
+        @State private var totalTime: TimeInterval = 0.0
+        @State private var currentTime: TimeInterval = 0.0
+        
     init(audioURL: URL, audioFileName: String, selectedBookDetail: Binding<BookDetail?>, expandSheet: Binding<Bool>, animation: Namespace.ID) {
         self.audioURL = audioURL
         self.audioFileName = audioFileName
@@ -78,13 +80,18 @@ struct Player: View {
     }
     
     private func setupAudio() {
-        do {
-            player = try AVAudioPlayer(contentsOf: audioURL)
-            player?.prepareToPlay()
-            totalTime = player?.duration ?? 0.0
-        } catch let error {
-            print("Error loading audio: \(error.localizedDescription)")
+            do {
+                player = try AVAudioPlayer(contentsOf: audioURL)
+                player?.prepareToPlay()
+                totalTime = player?.duration ?? 0.0
+                setVolumeToMatchSystem()
+            } catch let error {
+                print("Error loading audio: \(error.localizedDescription)")
+            }
         }
+        
+    private func setVolumeToMatchSystem() {
+        player?.volume = 1.0
     }
     
     private func playAudio() {
@@ -107,9 +114,11 @@ struct Player: View {
     }
     
     private func timeString(time: TimeInterval) -> String {
-        let minute = Int(time) / 60
-        let seconds = Int(time) % 60
-        return String(format: "%02d:%02d", minute, seconds)
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.minute, .second]
+        formatter.unitsStyle = .positional
+        formatter.zeroFormattingBehavior = .pad
+        return formatter.string(from: time)!
     }
     
     @ViewBuilder
