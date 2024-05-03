@@ -66,7 +66,8 @@ struct BooksPage: View {
     private var playerView: some View {
         if let fileURL = libraryStore.library.first?.files.first?.fileURL {
             return AnyView(
-                Player(audioURL: fileURL, audioFileName: libraryStore.library.first?.files.first?.fileName ?? "", selectedBookDetail: .constant(nil), expandSheet: .constant(true), animation: Namespace().wrappedValue)
+                Player(audioURL: .constant(fileURL), audioFileName: libraryStore.library.first?.files.first?.fileName ?? "", selectedBookDetail: .constant(nil), expandSheet: .constant(true), animation: Namespace().wrappedValue)
+
             )
         } else {
             return AnyView(

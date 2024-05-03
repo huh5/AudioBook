@@ -12,6 +12,8 @@ struct UploadFilePage: View {
     @State private var expandSheet = false
     @State private var showSecondView = false
     @State private var selectedFiles: [URL] = []
+    @State private var title = ""
+       @State private var author = ""
     var body: some View {
         
         NavigationView{
@@ -47,7 +49,6 @@ struct UploadFilePage: View {
                             .frame(width: 107, height: 95.50034)
                             .foregroundColor(.gray)
                         NavigationLink(destination: AddBookView(selectedFiles: $selectedFiles, libraryStore: LibraryStore(), imageStore: ImageStore())) {
-
 
 
                             Text("Upload")

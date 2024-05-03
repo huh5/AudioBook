@@ -17,6 +17,9 @@
 		99D0BF512BA9674300B236E8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 99D0BF502BA9674300B236E8 /* Assets.xcassets */; };
 		99D0BF542BA9674300B236E8 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 99D0BF532BA9674300B236E8 /* Preview Assets.xcassets */; };
 		99D0BF5F2BA967CA00B236E8 /* MusicButtonOpen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99D0BF5E2BA967CA00B236E8 /* MusicButtonOpen.swift */; };
+		99F6CCED2BD917900092CC66 /* ZipArchive in Frameworks */ = {isa = PBXBuildFile; productRef = 99F6CCEC2BD917900092CC66 /* ZipArchive */; };
+		99F6CCEF2BD918FF0092CC66 /* ZipArchive in Frameworks */ = {isa = PBXBuildFile; productRef = 99F6CCEE2BD918FF0092CC66 /* ZipArchive */; };
+		99F6CCF32BD91B440092CC66 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 99F6CCF22BD91B440092CC66 /* ZIPFoundation */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,7 +33,7 @@
 		99D0BF4E2BA9674100B236E8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		99D0BF502BA9674300B236E8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		99D0BF532BA9674300B236E8 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		99D0BF5A2BA9677A00B236E8 /* Info.plist */ = {isa = PBXFileReference; explicitFileType = text.xml; path = Info.plist; sourceTree = "<group>"; };
+		99D0BF5A2BA9677A00B236E8 /* Info.plist */ = {isa = PBXFileReference; explicitFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		99D0BF5E2BA967CA00B236E8 /* MusicButtonOpen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicButtonOpen.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -39,6 +42,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				99F6CCED2BD917900092CC66 /* ZipArchive in Frameworks */,
+				99F6CCEF2BD918FF0092CC66 /* ZipArchive in Frameworks */,
+				99F6CCF32BD91B440092CC66 /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -50,6 +56,7 @@
 			children = (
 				99D0BF4B2BA9674100B236E8 /* AudioBook */,
 				99D0BF4A2BA9674100B236E8 /* Products */,
+				99F6CCF02BD919C10092CC66 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -111,6 +118,13 @@
 			path = ViewModel;
 			sourceTree = "<group>";
 		};
+		99F6CCF02BD919C10092CC66 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -127,6 +141,11 @@
 			dependencies = (
 			);
 			name = AudioBook;
+			packageProductDependencies = (
+				99F6CCEC2BD917900092CC66 /* ZipArchive */,
+				99F6CCEE2BD918FF0092CC66 /* ZipArchive */,
+				99F6CCF22BD91B440092CC66 /* ZIPFoundation */,
+			);
 			productName = AudioBook;
 			productReference = 99D0BF492BA9674100B236E8 /* AudioBook.app */;
 			productType = "com.apple.product-type.application";
@@ -155,6 +174,10 @@
 				Base,
 			);
 			mainGroup = 99D0BF402BA9674100B236E8;
+			packageReferences = (
+				99F6CCEB2BD917900092CC66 /* XCRemoteSwiftPackageReference "ZipArchive" */,
+				99F6CCF12BD91B440092CC66 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+			);
 			productRefGroup = 99D0BF4A2BA9674100B236E8 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -326,6 +349,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AudioBook/Info.plist;
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "Пожалуйста, разрешите доступ к вашей медиатеке, чтобы выбирать аудиофайлы.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -360,6 +384,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AudioBook/Info.plist;
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "Пожалуйста, разрешите доступ к вашей медиатеке, чтобы выбирать аудиофайлы.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -404,6 +429,43 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		99F6CCEB2BD917900092CC66 /* XCRemoteSwiftPackageReference "ZipArchive" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ZipArchive/ZipArchive.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.5;
+			};
+		};
+		99F6CCF12BD91B440092CC66 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.19;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		99F6CCEC2BD917900092CC66 /* ZipArchive */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 99F6CCEB2BD917900092CC66 /* XCRemoteSwiftPackageReference "ZipArchive" */;
+			productName = ZipArchive;
+		};
+		99F6CCEE2BD918FF0092CC66 /* ZipArchive */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 99F6CCEB2BD917900092CC66 /* XCRemoteSwiftPackageReference "ZipArchive" */;
+			productName = ZipArchive;
+		};
+		99F6CCF22BD91B440092CC66 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 99F6CCF12BD91B440092CC66 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 99D0BF412BA9674100B236E8 /* Project object */;
 }

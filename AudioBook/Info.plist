@@ -2,25 +2,26 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>Privacy - Media Library Usage Description  </key>
-	<string>$(PRODUCT_NAME) media library use</string>
-	<key>NSAppleMusicUsageDescription</key>
-	<string>Пожалуйста, разрешите доступ к вашей медиатеке, чтобы выбирать аудиофайлы.</string>
-	<key>NSUbiquitousContainerIsDocumentScopePublic</key>
-	<string>NSUbiquitousContainerIsDocumentScopePublic</string>
 	<key>CFBundleURLTypes</key>
 	<string></string>
-    <key>NSOpenAccessClientAuthorizationRequests</key>
-    <array>
-        <dict>
-            <key>NSOpenAccessDocumentScope</key>
-            <string>com.example.myapp.documents</string> <!-- Идентификатор области документа -->
-            <key>NSOpenAccessDocumentIdentifier</key>
-            <string>myDocument</string> <!-- Идентификатор документа -->
-        </dict>
-    </array>
-
-
-
+	<key>NSOpenAccessClientAuthorizationRequests</key>
+	<array>
+		<dict>
+			<key>NSOpenAccessDocumentIdentifier</key>
+			<string>myDocument</string>
+			<key>NSOpenAccessDocumentScope</key>
+			<string>com.example.myapp.documents</string>
+		</dict>
+	</array>
+	<key>NSUbiquitousContainerIsDocumentScopePublic</key>
+	<string>NSUbiquitousContainerIsDocumentScopePublic</string>
+	<key>Privacy - Media Library Usage Description  </key>
+	<string>$(PRODUCT_NAME) media library use</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>Audio</string>
+		<string>audio</string>
+		<string>processing</string>
+	</array>
 </dict>
 </plist>
