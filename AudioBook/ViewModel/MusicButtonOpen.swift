@@ -13,12 +13,12 @@ import UniformTypeIdentifiers
 //1
 class MusicButtonData: ObservableObject {
     @Published var selectedFiles: [URL]
-       @Published var audioFileNames: [String] // Добавляем свойство для имен аудиофайлов
+    @Published var audioFileNames: [String] // Добавляем свойство для имен аудиофайлов
 
-       init(selectedFiles: [URL] = [], audioFileNames: [String] = []) {
-           self.selectedFiles = selectedFiles
-           self.audioFileNames = audioFileNames
-       }
+    init(selectedFiles: [URL] = [], audioFileNames: [String] = []) {
+        self.selectedFiles = selectedFiles
+        self.audioFileNames = audioFileNames
+    }
 
     func addFiles(urls: [URL]) {
         self.selectedFiles.append(contentsOf: urls)
@@ -56,7 +56,6 @@ class MusicButtonData: ObservableObject {
             print("Error unzipping file: \(error)")
         }
     }
-
     
     func removeAllFiles() {
         selectedFiles.removeAll()
@@ -100,6 +99,7 @@ struct MusicButtonOpen: View {
 struct DocumentPicker: UIViewControllerRepresentable {
     @Binding var selectedFiles: [URL]
     @Binding var audioFileNames: [String]
+    @Binding var isLoadingFiles: Bool // Добавляем состояние для индикатора загрузки
     
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -121,6 +121,7 @@ struct DocumentPicker: UIViewControllerRepresentable {
         }
 
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            parent.isLoadingFiles = true // Начинаем загрузку
             for url in urls {
                 if url.pathExtension == "zip" {
                     parent.extractFilesFromZip(url)
@@ -129,6 +130,7 @@ struct DocumentPicker: UIViewControllerRepresentable {
                     parent.audioFileNames.append(url.lastPathComponent)
                 }
             }
+            parent.isLoadingFiles = false // Заканчиваем загрузку
         }
     }
 

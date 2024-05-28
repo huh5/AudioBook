@@ -21,42 +21,32 @@ extension Color {
 }
 
 class PlayerInstance: ObservableObject {
-    var player: AVPlayer?
+    @Published var player: AVPlayer?
+    @Published var isPlaying: Bool = false
 }
 
 struct Player: View {
     
     @Binding var audioURL: URL
-    var audioFileName: String
+    @Binding var audioFileName: String
     @Binding var selectedBookDetail: BookDetail?
     @Binding var expandSheet: Bool
     var animation: Namespace.ID
     
     @State private var player: AVPlayer?
-    @State private var isPlaying = false
     @State private var totalTime: TimeInterval = 0.0
     @State private var currentTime: TimeInterval = 0.0
     @State private var audioSetupComplete = false
     @State private var timeObserver: Any?
     
-    // Inject PlayerInstance using @EnvironmentObject
     @EnvironmentObject var playerInstance: PlayerInstance
-    
-    init(audioURL: Binding<URL>, audioFileName: String, selectedBookDetail: Binding<BookDetail?>, expandSheet: Binding<Bool>, animation: Namespace.ID) {
-        self._audioURL = audioURL
-        self.audioFileName = audioFileName
-        self._selectedBookDetail = selectedBookDetail
-        self._expandSheet = expandSheet
-        self.animation = animation
-    }
-    
     
     var body: some View {
         GeometryReader { geo in
             let size = geo.size
             let safeArea = geo.safeAreaInsets
             
-            ZStack{
+            ZStack {
                 Rectangle()
                     .fill(Color.ultraThickMaterial)
                     .overlay(content: {
@@ -65,9 +55,9 @@ struct Player: View {
                             .blur(radius: 55)
                     })
                     .matchedGeometryEffect(id: "BGVIEW", in: animation)
-                VStack(spacing: 15){
-                    VStack(spacing: 15){
-                        GeometryReader{ geo in
+                VStack(spacing: 15) {
+                    VStack(spacing: 15) {
+                        GeometryReader { geo in
                             let size = geo.size
                             Image("forest")
                                 .resizable()
@@ -92,14 +82,14 @@ struct Player: View {
             .onAppear {
                 setupAudio()
                 playAudio()
-                configureAudioSession() // Вызов метода для настройки аудиосессии
-                setupNowPlayingInfoCenter() // Настройка информации о воспроизведении для управления с экрана блокировки и экрана управления мультимедиа
-                setupRemoteTransportControls() // Настройка управления аудио с экрана блокировки и экрана управления мультимедиа
+                configureAudioSession() // Configure audio session
+                setupNowPlayingInfoCenter() // Setup Now Playing Info Center
+                setupRemoteTransportControls() // Setup remote transport controls
             }
         }
     }
     
-    // Метод для настройки аудиосессии
+    // Configure audio session
     private func configureAudioSession() {
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
@@ -112,8 +102,12 @@ struct Player: View {
     private func setupAudio() {
         guard !audioSetupComplete else { return }
         
+        // Stop any currently playing player
+        playerInstance.player?.pause()
+        
         let playerItem = AVPlayerItem(url: audioURL)
         player = AVPlayer(playerItem: playerItem)
+        playerInstance.player = player
         player?.volume = 1.0
         
         // Observe duration changes for total time
@@ -121,25 +115,23 @@ struct Player: View {
             if let duration = self.player?.currentItem?.duration.seconds, duration > 0.0 {
                 DispatchQueue.main.async {
                     self.totalTime = duration
-                    self.updateProgress() // Обновляем прогресс при изменении времени
+                    self.updateProgress() // Update progress on time change
                 }
             }
         }
-        
         
         audioSetupComplete = true
     }
     
     private func playAudio() {
         player?.play()
-        isPlaying = true
+        playerInstance.isPlaying = true
     }
-
+    
     private func stopAudio() {
         player?.pause()
-        isPlaying = false
+        playerInstance.isPlaying = false
     }
-
     
     private func updateProgress() {
         currentTime = player?.currentTime().seconds ?? 0.0
@@ -184,8 +176,6 @@ struct Player: View {
         playAudio()
     }
     
-    
-    // Add buttons and bindings in your PlayerView
     @ViewBuilder
     func PlayerView(size: CGSize) -> some View {
         VStack(spacing: size.height * 0.04) {
@@ -233,13 +223,13 @@ struct Player: View {
                             .font(size.height < 300 ? .title3 : .title)
                     }
                     Button(action: {
-                        if isPlaying {
+                        if playerInstance.isPlaying {
                             stopAudio()
                         } else {
                             playAudio()
                         }
                     }) {
-                        Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                        Image(systemName: playerInstance.isPlaying ? "pause.fill" : "play.fill")
                             .font(size.height < 300 ? .largeTitle : .system(size: 50))
                     }
                     
@@ -269,7 +259,7 @@ struct Player: View {
         
         let duration = CMTimeGetSeconds(player.currentItem?.asset.duration ?? CMTime.zero)
         nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
-        nowPlayingInfo[MPMediaItemPropertyTitle] = audioFileName // Добавляем название файла
+        nowPlayingInfo[MPMediaItemPropertyTitle] = audioFileName // Adding file name
         
         let elapsedTime = CMTimeGetSeconds(player.currentTime())
         nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = elapsedTime
@@ -283,29 +273,27 @@ struct Player: View {
             nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = elapsedTime
             nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
         }
-        
     }
-    
     
     private func setupRemoteTransportControls() {
         let commandCenter = MPRemoteCommandCenter.shared()
         
         commandCenter.playCommand.addTarget { event in
-            if !isPlaying {
+            if !playerInstance.isPlaying {
                 playAudio()
             }
             return .success
         }
         
         commandCenter.pauseCommand.addTarget { event in
-            if isPlaying {
+            if playerInstance.isPlaying {
                 stopAudio()
             }
             return .success
         }
         
         commandCenter.togglePlayPauseCommand.addTarget { event in
-            if isPlaying {
+            if playerInstance.isPlaying {
                 stopAudio()
             } else {
                 playAudio()
@@ -334,5 +322,4 @@ struct Player: View {
             return .success
         }
     }
-
 }

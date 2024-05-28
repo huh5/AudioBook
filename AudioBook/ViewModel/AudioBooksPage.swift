@@ -5,9 +5,12 @@
 //  Created by Богдан Ткачивський on 19/03/2024.
 //
 
+import Combine
 import SwiftUI
 import AVFoundation
 import ZIPFoundation
+import UniformTypeIdentifiers
+
 
 class FileDetail: Identifiable, Codable {
     var id = UUID()
@@ -44,6 +47,10 @@ struct Book: Identifiable, Codable {
     var id = UUID()
     var title: String
     var author: String
+}
+
+struct AudioFile {
+    var fileURL: URL
 }
 
 class BookDetail: Identifiable, Codable {
@@ -143,12 +150,13 @@ struct AudioBooksPage: View {
     @State private var isAddBookViewActive = false
     @State private var selectedBookTitle = ""
     @State private var selectedBookAuthor = ""
-    
+    var onSelectAudioFile: (URL) -> Void
+
     var body: some View {
         NavigationView {
             List {
                 ForEach(libraryStore.library) { bookDetail in
-                    NavigationLink(destination: BookDetailView(selectedBookDetail: $selectedBookDetail, bookDetail: bookDetail, libraryStore: libraryStore, imageStore: imageStore)) {
+                    NavigationLink(destination: BookDetailView(selectedBookDetail: $selectedBookDetail, bookDetail: bookDetail, libraryStore: libraryStore, imageStore: imageStore, onSelectAudioFile: onSelectAudioFile)) {
                         BookRow(bookDetail: bookDetail)
                     }
                 }
@@ -171,13 +179,11 @@ struct AudioBooksPage: View {
                     .navigationBarItems(leading: Button("Back") {
                         isAddBookViewActive = false
                     })
-                    .navigationBarBackButtonHidden(true) // Скрываем стандартную кнопку "Назад"
+                    .navigationBarBackButtonHidden(true)
             }
         }
-
     }
 }
-
 
 struct BookRow: View {
     var bookDetail: BookDetail
@@ -204,20 +210,17 @@ struct BookRow: View {
     }
 }
 
-
 struct BookDetailView: View {
-    
     @Binding var selectedBookDetail: BookDetail?
     var bookDetail: BookDetail
     @ObservedObject var libraryStore: LibraryStore
     @ObservedObject var imageStore: ImageStore
-    @State private var selectedFile: IdentifiedURL?
-    
-    @EnvironmentObject var playerInstance: PlayerInstance
-    
+    var onSelectAudioFile: (URL) -> Void
+
     var body: some View {
         ScrollView {
-            VStack(spacing: 10) {
+            VStack(spacing: 20) {
+                // Изображение и детали книги
                 if let imageData = bookDetail.imageData, let uiImage = UIImage(data: imageData) {
                     Image(uiImage: uiImage)
                         .resizable()
@@ -227,28 +230,41 @@ struct BookDetailView: View {
                 } else {
                     Image(systemName: "text.book.closed.fill")
                         .resizable()
-                        .frame(width: 20, height: 25)
+                        .frame(width: 100, height: 125)
+                        .padding()
                 }
                 Text(bookDetail.book.title)
                     .font(.title)
+                    .fontWeight(.bold)
                 Text(bookDetail.book.author)
                     .font(.subheadline)
                     .foregroundColor(.gray)
-            }
-            VStack {
-                ForEach(bookDetail.files, id: \.id) { file in
-                    Button(action: {
-                        self.selectedFile = IdentifiedURL(url: file.fileURL)
-                    }) {
-                        Text(file.fileName)
+                
+                // Список файлов
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(Array(bookDetail.files.enumerated()), id: \.element.id) { index, file in
+                        Button(action: {
+                            onSelectAudioFile(file.fileURL)
+                        }) {
+                            HStack {
+                                Text("\(index + 1).")
+                                    .fontWeight(.bold)
+                                Text(file.fileName)
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                                Spacer()
+                            }
+                            .padding()
+                            .background(Color(UIColor.systemGray6))
+                            .cornerRadius(10)
+                        }
                     }
                 }
+                .padding(.top, 20)
             }
-        }
-        .padding()
-        .navigationTitle(bookDetail.book.title)
-        .sheet(item: $selectedFile) { identifiedURL in
-            Player(audioURL: .constant(identifiedURL.url), audioFileName: identifiedURL.url.lastPathComponent, selectedBookDetail: $selectedBookDetail, expandSheet: .constant(true), animation: Namespace().wrappedValue)
+            .padding()
+            .navigationTitle(bookDetail.book.title)
+            .navigationBarItems(trailing: EmptyView())
         }
     }
 }
@@ -257,15 +273,16 @@ struct BookDetailView: View {
 
 struct AddBookView: View {
     @Binding var selectedFiles: [URL]
-       @ObservedObject var libraryStore: LibraryStore
-       @ObservedObject var imageStore: ImageStore
-       @State private var title = ""
-       @State private var author = ""
-       @State private var image: UIImage?
-       @State private var isImagePickerPresented = false
-       @State private var showDocumentPicker = false
-       @State private var audioFileNames: [String] = [] // Добавляем переменную для имен аудиофайлов
-       @Environment(\.presentationMode) var presentationMode
+    @ObservedObject var libraryStore: LibraryStore
+    @ObservedObject var imageStore: ImageStore
+    @State private var title = ""
+    @State private var author = ""
+    @State private var image: UIImage?
+    @State private var isImagePickerPresented = false
+    @State private var showDocumentPicker = false
+    @State private var audioFileNames: [String] = [] // Добавляем переменную для имен аудиофайлов
+    @State private var isLoadingFiles = false // Добавляем состояние для индикатора загрузки
+    @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
         List {
@@ -306,23 +323,23 @@ struct AddBookView: View {
                     Text("Choose Audio Files")
                 }
                 .sheet(isPresented: $showDocumentPicker) {
-                    DocumentPicker(selectedFiles: $selectedFiles, audioFileNames: $audioFileNames)
+                    DocumentPicker(selectedFiles: $selectedFiles, audioFileNames: $audioFileNames, isLoadingFiles: $isLoadingFiles) // Передаем состояние isLoadingFiles
                 }
                 
-                
-                
-                ForEach(selectedFiles.indices, id: \.self) { index in
-                    Text("\(index + 1). \(selectedFiles[index].lastPathComponent)")
+                if isLoadingFiles {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                        Spacer()
+                    }
+                } else {
+                    ForEach(selectedFiles.indices, id: \.self) { index in
+                        Text("\(index + 1). \(selectedFiles[index].lastPathComponent)")
+                    }
+                    .onMove { indices, newOffset in
+                        selectedFiles.move(fromOffsets: indices, toOffset: newOffset)
+                    }
                 }
-                .onMove { indices, newOffset in
-                    selectedFiles.move(fromOffsets: indices, toOffset: newOffset)
-                }
-
-                
-
-
-                
-             
             }
             Section {
                 Button("Add Book") {
@@ -375,19 +392,26 @@ struct AddBookView: View {
     }
 }
 
+// struct AddBookView_Previews: PreviewProvider {
+//     static var previews: some View {
+//         AddBookView(selectedFiles: .constant([]), libraryStore: LibraryStore(), imageStore: ImageStore(), title: .constant(""), author: .constant(""))
+//     }
+// }
 
-//struct AddBookView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        AddBookView(selectedFiles: .constant([]), libraryStore: LibraryStore(), imageStore: ImageStore(), title: .constant(""), author: .constant(""))
-//    }
-//}
-
-
-struct AudioBookPage_Previews: PreviewProvider {
+struct AudioBooksPage_Previews: PreviewProvider {
     static var previews: some View {
-        AudioBooksPage(libraryStore: LibraryStore(), imageStore: ImageStore(), selectedFiles: .constant([]))
+        AudioBooksPage(
+            libraryStore: LibraryStore(),
+            imageStore: ImageStore(),
+            selectedFiles: .constant([]),
+            onSelectAudioFile: { url in
+                print("Audio file selected: \(url)")
+            }
+        )
     }
 }
+
+
 
 class ImageStore: ObservableObject {
     @Published var imageData: Data? {

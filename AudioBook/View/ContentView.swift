@@ -14,18 +14,25 @@ class TabSelectionViewModel: ObservableObject {
 }
 
 struct ContentView: View {
-    @ObservedObject var tabSelectionViewModel = TabSelectionViewModel() // Используйте ObservedObject
-       @State private var showAlert = false
+    @ObservedObject var tabSelectionViewModel = TabSelectionViewModel() // Use ObservedObject
+    @State private var showAlert = false
+    @State private var isOnHomePage = true // Add state variable to track if on HomePage
     
     var body: some View {
-        VStack {
-            BooksPage(viewModel: tabSelectionViewModel) // Передавайте tabSelectionViewModel напрямую
-                .onAppear {
-                    tabSelectionViewModel.musicButtonData.loadSelectedFiles()
+        ZStack {
+            if isOnHomePage {
+                HomePage(viewModel: tabSelectionViewModel) {
+                    isOnHomePage = false // Update state to transition to BooksPage
                 }
-                .onDisappear {
-                    tabSelectionViewModel.musicButtonData.saveSelectedFiles()
-                }
+            } else {
+                BooksPage(viewModel: tabSelectionViewModel)
+                    .onAppear {
+                        tabSelectionViewModel.musicButtonData.loadSelectedFiles()
+                    }
+                    .onDisappear {
+                        tabSelectionViewModel.musicButtonData.saveSelectedFiles()
+                    }
+            }
         }
         .alert(isPresented: $showAlert) {
             Alert(
@@ -58,4 +65,3 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
-

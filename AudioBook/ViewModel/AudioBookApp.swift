@@ -23,6 +23,7 @@ import AVFoundation
 //    }
 //}
 struct AudioBookApp: App {
+    
     @StateObject var playerInstance = PlayerInstance() // Используйте @StateObject для объявления экземпляра PlayerInstance
     
     var body: some Scene {

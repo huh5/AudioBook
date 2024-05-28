@@ -12,6 +12,7 @@
 		992BA6112BA96A38005251ED /* UploadFilePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992BA6102BA96A38005251ED /* UploadFilePage.swift */; };
 		992BA6132BA96A53005251ED /* BooksPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992BA6122BA96A53005251ED /* BooksPage.swift */; };
 		992BA6152BA96A6F005251ED /* AudioBooksPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992BA6142BA96A6F005251ED /* AudioBooksPage.swift */; };
+		9947ADB02C00A6E600AE8253 /* PlayerNotificationHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9947ADAF2C00A6E600AE8253 /* PlayerNotificationHandler.swift */; };
 		99D0BF4D2BA9674100B236E8 /* AudioBookApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99D0BF4C2BA9674100B236E8 /* AudioBookApp.swift */; };
 		99D0BF4F2BA9674100B236E8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99D0BF4E2BA9674100B236E8 /* ContentView.swift */; };
 		99D0BF512BA9674300B236E8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 99D0BF502BA9674300B236E8 /* Assets.xcassets */; };
@@ -28,6 +29,7 @@
 		992BA6102BA96A38005251ED /* UploadFilePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadFilePage.swift; sourceTree = "<group>"; };
 		992BA6122BA96A53005251ED /* BooksPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BooksPage.swift; sourceTree = "<group>"; };
 		992BA6142BA96A6F005251ED /* AudioBooksPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioBooksPage.swift; sourceTree = "<group>"; };
+		9947ADAF2C00A6E600AE8253 /* PlayerNotificationHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerNotificationHandler.swift; sourceTree = "<group>"; };
 		99D0BF492BA9674100B236E8 /* AudioBook.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AudioBook.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		99D0BF4C2BA9674100B236E8 /* AudioBookApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioBookApp.swift; sourceTree = "<group>"; };
 		99D0BF4E2BA9674100B236E8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -104,6 +106,7 @@
 		99D0BF5C2BA9679B00B236E8 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				9947ADAF2C00A6E600AE8253 /* PlayerNotificationHandler.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -204,6 +207,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9947ADB02C00A6E600AE8253 /* PlayerNotificationHandler.swift in Sources */,
 				992BA60F2BA969D7005251ED /* HomePage.swift in Sources */,
 				992BA60D2BA969B1005251ED /* Player.swift in Sources */,
 				99D0BF4F2BA9674100B236E8 /* ContentView.swift in Sources */,
