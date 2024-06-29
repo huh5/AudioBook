@@ -7,7 +7,6 @@
 
 import SwiftUI
 import AVFoundation
-
 struct BooksPage: View {
     @ObservedObject var viewModel: TabSelectionViewModel
     @StateObject var libraryStore = LibraryStore()
@@ -47,11 +46,17 @@ struct BooksPage: View {
                 }
                 .tag(2)
 
-                if let url = activeAudioURL, let fileName = activeAudioFileName, let bookDetail = activeBookDetail {
+                if let activeAudioURL = activeAudioURL, let activeAudioFileName = activeAudioFileName, let activeBookDetail = activeBookDetail {
                     Player(
-                        audioURL: Binding(get: { url }, set: { self.activeAudioURL = $0 }),
-                        audioFileName: Binding(get: { fileName }, set: { self.activeAudioFileName = $0 }),
-                        selectedBookDetail: Binding(get: { bookDetail }, set: { self.activeBookDetail = $0 }),
+                        audioURL: Binding(
+                            get: { activeAudioURL },
+                            set: { newValue in self.activeAudioURL = newValue }
+                        ),
+                        audioFileName: activeAudioFileName,
+                        selectedBookDetail: Binding(
+                            get: { activeBookDetail },
+                            set: { newValue in self.activeBookDetail = newValue }
+                        ),
                         expandSheet: $expandSheet,
                         animation: animation
                     )
@@ -71,6 +76,7 @@ struct BooksPage: View {
         .environmentObject(playerInstance)
     }
 }
+
 
 struct BooksPage_Previews: PreviewProvider {
     static var previews: some View {

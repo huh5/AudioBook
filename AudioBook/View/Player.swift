@@ -21,43 +21,48 @@ extension Color {
 }
 
 class PlayerInstance: ObservableObject {
-    @Published var player: AVPlayer?
-    @Published var isPlaying: Bool = false
+    var player: AVPlayer?
 }
 
 struct Player: View {
     
     @Binding var audioURL: URL
-    @Binding var audioFileName: String
+    var audioFileName: String
     @Binding var selectedBookDetail: BookDetail?
     @Binding var expandSheet: Bool
     var animation: Namespace.ID
     
     @State private var player: AVPlayer?
+    @State private var isPlaying = false
     @State private var totalTime: TimeInterval = 0.0
     @State private var currentTime: TimeInterval = 0.0
     @State private var audioSetupComplete = false
     @State private var timeObserver: Any?
     
+    // Inject PlayerInstance using @EnvironmentObject
     @EnvironmentObject var playerInstance: PlayerInstance
+    
+    init(audioURL: Binding<URL>, audioFileName: String, selectedBookDetail: Binding<BookDetail?>, expandSheet: Binding<Bool>, animation: Namespace.ID) {
+        self._audioURL = audioURL
+        self.audioFileName = audioFileName
+        self._selectedBookDetail = selectedBookDetail
+        self._expandSheet = expandSheet
+        self.animation = animation
+    }
     
     var body: some View {
         GeometryReader { geo in
-            let size = geo.size
-            let safeArea = geo.safeAreaInsets
-            
-            ZStack {
+            ZStack{
                 Rectangle()
                     .fill(Color.ultraThickMaterial)
                     .overlay(content: {
-                        Rectangle()
                         Image("forest")
                             .blur(radius: 55)
                     })
                     .matchedGeometryEffect(id: "BGVIEW", in: animation)
-                VStack(spacing: 15) {
-                    VStack(spacing: 15) {
-                        GeometryReader { geo in
+                VStack(spacing: 15){
+                    VStack(spacing: 15){
+                        GeometryReader{ geo in
                             let size = geo.size
                             Image("forest")
                                 .resizable()
@@ -65,14 +70,14 @@ struct Player: View {
                                 .frame(width: size.width, height: size.height)
                                 .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
                         }
-                        .frame(height: size.width - 50)
-                        .padding(.vertical, size.height < 700 ? 10 : 30)
+                        .frame(height: geo.size.width - 50)
+                        .padding(.vertical, geo.size.height < 700 ? 10 : 30)
                         
-                        PlayerView(size: size)
+                        PlayerView()
                             .offset(CGSize(width: 10.0, height: 10.0))
                     }
-                    .padding(.top, safeArea.top + (safeArea.bottom == 0 ? 10 : 0))
-                    .padding(.bottom, safeArea.bottom == 0 ? 10 : safeArea.bottom)
+                    .padding(.top, geo.safeAreaInsets.top + (geo.safeAreaInsets.bottom == 0 ? 10 : 0))
+                    .padding(.bottom, geo.safeAreaInsets.bottom == 0 ? 10 : geo.safeAreaInsets.bottom)
                     .padding(.horizontal, 25)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     .clipped()
@@ -82,14 +87,14 @@ struct Player: View {
             .onAppear {
                 setupAudio()
                 playAudio()
-                configureAudioSession() // Configure audio session
-                setupNowPlayingInfoCenter() // Setup Now Playing Info Center
-                setupRemoteTransportControls() // Setup remote transport controls
+                configureAudioSession()
+                setupNowPlayingInfoCenter()
+                setupRemoteTransportControls()
             }
         }
     }
     
-    // Configure audio session
+    // Method to configure audio session
     private func configureAudioSession() {
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
@@ -102,12 +107,8 @@ struct Player: View {
     private func setupAudio() {
         guard !audioSetupComplete else { return }
         
-        // Stop any currently playing player
-        playerInstance.player?.pause()
-        
         let playerItem = AVPlayerItem(url: audioURL)
         player = AVPlayer(playerItem: playerItem)
-        playerInstance.player = player
         player?.volume = 1.0
         
         // Observe duration changes for total time
@@ -115,7 +116,7 @@ struct Player: View {
             if let duration = self.player?.currentItem?.duration.seconds, duration > 0.0 {
                 DispatchQueue.main.async {
                     self.totalTime = duration
-                    self.updateProgress() // Update progress on time change
+                    self.updateProgress()
                 }
             }
         }
@@ -125,13 +126,14 @@ struct Player: View {
     
     private func playAudio() {
         player?.play()
-        playerInstance.isPlaying = true
+        isPlaying = true
     }
-    
+
     private func stopAudio() {
         player?.pause()
-        playerInstance.isPlaying = false
+        isPlaying = false
     }
+
     
     private func updateProgress() {
         currentTime = player?.currentTime().seconds ?? 0.0
@@ -176,77 +178,82 @@ struct Player: View {
         playAudio()
     }
     
+    
+    // Add buttons and bindings in your PlayerView
     @ViewBuilder
-    func PlayerView(size: CGSize) -> some View {
-        VStack(spacing: size.height * 0.04) {
-            VStack(spacing: size.height * 0.04) {
-                HStack(alignment: .center, spacing: 15) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(audioFileName)
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                        
-                        Text(".mp3")
-                            .foregroundColor(.gray)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    Button(action: {}) {
-                        Image(systemName: "ellipsis")
-                            .foregroundColor(.white)
-                            .padding()
-                            .background(
-                                Circle()
-                                    .fill(Color.ultraThinMaterial)
-                                    .environment(\.colorScheme, .light)
-                            )
-                    }
-                }
-                
-                Slider(value: Binding(
-                    get: { currentTime },
-                    set: { newValue in
-                        seekAudio(to: newValue)
-                    }
-                ), in: 0...totalTime)
-                .foregroundColor(.white)
-                
-                HStack {
-                    Text(timeString(time: currentTime))
-                    Spacer()
-                    Text(timeString(time: totalTime))
-                }
-                HStack(spacing: size.width * 0.18) {
-                    
-                    Button(action: { self.playPreviousTrack() }) {
-                        Image(systemName: "backward.fill")
-                            .font(size.height < 300 ? .title3 : .title)
-                    }
-                    Button(action: {
-                        if playerInstance.isPlaying {
-                            stopAudio()
-                        } else {
-                            playAudio()
+    func PlayerView() -> some View {
+        GeometryReader { geo in
+            VStack(spacing: geo.size.height * 0.04) {
+                VStack(spacing: geo.size.height * 0.04) {
+                    HStack(alignment: .center, spacing: 15) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(audioFileName)
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                            
+                            Text(".mp3")
+                                .foregroundColor(.gray)
                         }
-                    }) {
-                        Image(systemName: playerInstance.isPlaying ? "pause.fill" : "play.fill")
-                            .font(size.height < 300 ? .largeTitle : .system(size: 50))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        Button(action: {}) {
+                            Image(systemName: "ellipsis")
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(
+                                    Circle()
+                                        .fill(Color.ultraThinMaterial)
+                                        .environment(\.colorScheme, .light)
+                                )
+                        }
                     }
                     
-                    Button(action: { self.playNextTrack() }) {
-                        Image(systemName: "forward.fill")
-                            .font(size.height < 300 ? .title3 : .title)
+                    Slider(value: Binding(
+                        get: { currentTime },
+                        set: { newValue in
+                            seekAudio(to: newValue)
+                        }
+                    ), in: 0...totalTime)
+                    .foregroundColor(.white)
+                    
+                    HStack {
+                        Text(timeString(time: currentTime))
+                        Spacer()
+                        Text(timeString(time: totalTime))
                     }
+                    
+                    HStack(spacing: geo.size.width * 0.18) {
+                        
+                        Button(action: { self.playPreviousTrack() }) {
+                            Image(systemName: "backward.fill")
+                                .font(geo.size.height < 300 ? .title3 : .title)
+                        }
+                        
+                        Button(action: {
+                            if isPlaying {
+                                stopAudio()
+                            } else {
+                                playAudio()
+                            }
+                        }) {
+                            Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                                .font(geo.size.height < 300 ? .largeTitle : .system(size: 50))
+                        }
+                        
+                        Button(action: { self.playNextTrack() }) {
+                            Image(systemName: "forward.fill")
+                                .font(geo.size.height < 300 ? .title3 : .title)
+                        }
+                        
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
                     
                 }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                
+                .frame(height: geo.size.height / 2.5, alignment: .top)
             }
-            .frame(height: size.height / 2.5, alignment: .top)
-            
+            .ignoresSafeArea(.container, edges: .bottom)
         }
-        .ignoresSafeArea(.container, edges: .bottom)
     }
     
     // MARK: - Remote Control and Now Playing Info
@@ -259,7 +266,7 @@ struct Player: View {
         
         let duration = CMTimeGetSeconds(player.currentItem?.asset.duration ?? CMTime.zero)
         nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
-        nowPlayingInfo[MPMediaItemPropertyTitle] = audioFileName // Adding file name
+        nowPlayingInfo[MPMediaItemPropertyTitle] = audioFileName
         
         let elapsedTime = CMTimeGetSeconds(player.currentTime())
         nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = elapsedTime
@@ -279,46 +286,25 @@ struct Player: View {
         let commandCenter = MPRemoteCommandCenter.shared()
         
         commandCenter.playCommand.addTarget { event in
-            if !playerInstance.isPlaying {
-                playAudio()
+            if self.player == nil {
+                self.setupAudio()
             }
+            self.playAudio()
             return .success
         }
         
         commandCenter.pauseCommand.addTarget { event in
-            if playerInstance.isPlaying {
-                stopAudio()
-            }
+            self.stopAudio()
             return .success
         }
         
-        commandCenter.togglePlayPauseCommand.addTarget { event in
-            if playerInstance.isPlaying {
-                stopAudio()
-            } else {
-                playAudio()
-            }
-            return .success
-        }
-        
-        commandCenter.nextTrackCommand.isEnabled = true
         commandCenter.nextTrackCommand.addTarget { event in
-            playNextTrack()
+            self.playNextTrack()
             return .success
         }
         
-        commandCenter.previousTrackCommand.isEnabled = true
         commandCenter.previousTrackCommand.addTarget { event in
-            playPreviousTrack()
-            return .success
-        }
-        
-        // Add seeking controls
-        commandCenter.changePlaybackPositionCommand.isEnabled = true
-        commandCenter.changePlaybackPositionCommand.addTarget { event in
-            guard let event = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
-            let newPosition = event.positionTime
-            seekAudio(to: newPosition)
+            self.playPreviousTrack()
             return .success
         }
     }
